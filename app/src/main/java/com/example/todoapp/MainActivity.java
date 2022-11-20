@@ -5,11 +5,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.GridLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.RadioButton;
@@ -21,96 +24,70 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ScrollView scrollView = null;
+    private int buttonWidth;
     private DatabaseManager dbManager;
-    private List RecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Toolbar toolbar = findViewById( R.id.toolbar );
+        // setSupportActionBar( toolbar );
         dbManager = new DatabaseManager(this);
+        scrollView = findViewById(R.id.scrollView);
+        Point size = new Point( );
+        getWindowManager( ).getDefaultDisplay( ).getSize( size );
+        buttonWidth = size.x / 2;
         updateView();
     }
 
-    private void updateView(){
-        ArrayList<ToDo> tasks = dbManager.selectAll();
-        int items = 0;
-        ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
+    protected void onResume( ) {
+        super.onResume( );
+        updateView( );
     }
-   /* private void updateView() {
-        List<ToDo> tasks = dbManager.selectAll();
-        tasks = Collections.synchronizedList(tasks);
 
-        RelativeLayout layout = new RelativeLayout(this);
-        ScrollView scrollView = new ScrollView(this);
-        RadioGroup group = new RadioGroup(this);
-
-        for (ToDo td : tasks) {
-            RadioButton rb = new RadioButton(this);
-            // ListView lv = new ListView(this);
-            rb.setId(td.getId());
-            rb.setText(td.toString());
-            group.addView(rb);
-        }
-
-        scrollView.addView(group);
-        layout.addView( scrollView );
-        setContentView( layout );
-
-
-        synchronized (tasks) {
-            Iterator<ToDo> itr = tasks.iterator();
-            while (itr.hasNext()) {
-                System.out.println(itr.next());
-            }
-        }
-
-
-    }*/
-
-   /* private void updateView() {
+    public void updateView( ) {
         ArrayList<ToDo> tasks = dbManager.selectAll();
-        RelativeLayout layout = new RelativeLayout(this);
-        ScrollView scrollView = new ScrollView(this);
-        RadioGroup group = new RadioGroup(this);
+        if (tasks.size() > 0) {
+            // remove subviews inside scrollView if necessary
+            scrollView.removeAllViewsInLayout();
 
+            // set up the grid layout
+            GridLayout grid = new GridLayout(this);
+            grid.setRowCount((tasks.size() + 1) / 2);
+            grid.setColumnCount(2);
 
-        for (ToDo td : tasks) {
-            RadioButton rb = new RadioButton(this);
-           // ListView lv = new ListView(this);
-            rb.setId(td.getId());
-            rb.setText(td.toString());
-            group.addView(rb);
+            // create array of buttons, 2 per row
+            ToDoButton[] buttons = new ToDoButton[tasks.size()];
+            //ButtonHandler bh = new ButtonHandler( );
+
+            // fill the grid
+            int i = 0;
+            for (ToDo td : tasks) {
+                // create the button
+                buttons[i] = new ToDoButton(this, td);
+                buttons[i].setText(td.getItem());
+
+                // add the button to grid
+                grid.addView(buttons[i], buttonWidth,
+                        GridLayout.LayoutParams.WRAP_CONTENT);
+                i++;
+            }
+            scrollView.addView(grid);
         }
-
-        scrollView.addView(group);
-        layout.addView( scrollView );
-        setContentView( layout );
-
-       /* ArrayList<ToDo> tasks = dbManager.selectAll();
-        RelativeLayout layout = new RelativeLayout(this);
-        ScrollView scrollView = new ScrollView(this);
-        ListView list = new ListView(this);
-
-        for (ToDo td : tasks) {
-            ListView lv = new ListView(this);
-            lv.setId(td.getId());
-           // lv.setText(td.toString());
-            list.addView(lv);
-        }
-
-        scrollView.addView(list);
-        layout.addView( scrollView );
-        setContentView( layout );
-
-    }*/
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-
 
     }
 }
